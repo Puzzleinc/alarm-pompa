@@ -1,8 +1,24 @@
 #include <Arduino.h>
+#include <Wire.h>
+
+#include "wificonnect.h"
+
+#include <ESPAsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+
 #define buzz 1
 #define redled 3
 #define greenled 2
 #define blueled 0
+
+/* Put your SSID & Password */
+const char* ssid;  // Enter SSID here
+const char* password;  //Enter Password here
+
+// Initialize server
+AsyncWebServer server(80);
+// Make variable prototype
+void handleRequest(AsyncWebServerRequest *request);
 
 // Define millis variable #1
 const unsigned long dangerInterval = 30000; // 30 menit
@@ -11,17 +27,22 @@ const unsigned long okInterval = 0;
 unsigned long previousTime = 0;
 
 void setup() {
-  // put your setup code here, to run once:
-
  /*  Common cathode led RGB */
   Serial.begin(115200);
-  // pinMode(LED_BUILTIN, OUTPUT);
+
   pinMode(buzz, OUTPUT);
   pinMode(redled, OUTPUT);
   pinMode(greenled, OUTPUT);
   pinMode(blueled, OUTPUT);
-  digitalWrite(blueled, HIGH);
-  Serial.println("Hello, ESP01!");
+
+  //  Connecting to wifi -----------------------
+  ssid = "Puzzle24";  // Enter SSID here
+  password = "gzcmb94463";  //Enter Password here
+  wificonnect(ssid, password);
+
+    //  Creating handle request from client -----------------------
+  server.on("/", HTTP_ANY, handleRequest);
+  server.begin();
 }
 
 void loop() {
@@ -46,4 +67,15 @@ void loop() {
     digitalWrite(redled, LOW);
     digitalWrite(blueled, HIGH);
   }
+}
+
+void handleRequest(AsyncWebServerRequest *request){
+  // unsigned long thisTime = millis();
+  // String result = "";
+
+  // while (thisTime) {
+  //     result += (char)thisTime;
+  // }
+
+  request->send(200, "text/plain", "Waktu saat ini : ???");
 }
