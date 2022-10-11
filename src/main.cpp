@@ -1,12 +1,12 @@
 #include <Arduino.h>
-#define buzz 0
+#define buzz 1
 #define redled 3
-#define greenled 1
-#define blueled 2
+#define greenled 2
+#define blueled 0
 
 // Define millis variable #1
-const unsigned long dangerInterval = 2100000; // 30 menit
-const unsigned long warningInterval = 1200000; // 20 menit
+const unsigned long dangerInterval = 30000; // 30 menit
+const unsigned long warningInterval = 20000; // 20 menit
 const unsigned long okInterval = 0;
 unsigned long previousTime = 0;
 
