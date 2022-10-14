@@ -42,6 +42,8 @@ void setup() {
   deviceName = "Sensor Pompa"; // DHCP Hostname (useful for finding device for static lease)
   wificonnect(ssid, password, deviceName);
 
+  Serial.println(WiFi.gatewayIP());
+
     //  Creating handle request from client -----------------------
   server.on("/", HTTP_ANY, handleRequest);
   server.begin();

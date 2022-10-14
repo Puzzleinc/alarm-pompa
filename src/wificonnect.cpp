@@ -2,15 +2,15 @@
 #include "wificonnect.h"
 
 void wificonnect(const char* ssid, const char* password, const char* deviceName) {
+    WiFi.hostname(deviceName);      // DHCP Hostname (useful for finding device for static lease)
+
     // Set your Static IP address ------------------------
-    IPAddress local_IP(192, 168, 2, 220);
+    IPAddress local_IP(192, 168, 0, 190);
     // Set your Gateway IP address
     IPAddress gateway(192, 168, 0, 1);
     IPAddress subnet(255, 255, 255, 0);
     IPAddress primaryDNS(1, 1, 1, 1);   //optional
     IPAddress secondaryDNS(1, 0, 0, 1); //optional
-    
-     WiFi.hostname(deviceName);      // DHCP Hostname (useful for finding device for static lease)
     
     // Configures static IP address ----------------------
     if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
