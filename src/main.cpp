@@ -14,6 +14,7 @@
 /* Put your SSID & Password */
 const char* ssid;  // Enter SSID here
 const char* password;  //Enter Password here
+const char* deviceName;
 
 // Initialize server
 AsyncWebServer server(80);
@@ -21,8 +22,8 @@ AsyncWebServer server(80);
 void handleRequest(AsyncWebServerRequest *request);
 
 // Define millis variable #1
-const unsigned long dangerInterval = 30000; // 30 menit
-const unsigned long warningInterval = 20000; // 20 menit
+const unsigned long dangerInterval = 1800000; // 30 menit
+const unsigned long warningInterval =  900000; // 15 menit
 const unsigned long okInterval = 0;
 unsigned long previousTime = 0;
 
@@ -37,8 +38,9 @@ void setup() {
 
   //  Connecting to wifi -----------------------
   ssid = "Puzzle24";  // Enter SSID here
-  password = "gzcmb94463";  //Enter Password here
-  wificonnect(ssid, password);
+  password = "gzcmb94463";  // Enter Password here
+  deviceName = "Sensor Pompa"; // DHCP Hostname (useful for finding device for static lease)
+  wificonnect(ssid, password, deviceName);
 
     //  Creating handle request from client -----------------------
   server.on("/", HTTP_ANY, handleRequest);
@@ -70,12 +72,7 @@ void loop() {
 }
 
 void handleRequest(AsyncWebServerRequest *request){
-  // unsigned long thisTime = millis();
-  // String result = "";
-
-  // while (thisTime) {
-  //     result += (char)thisTime;
-  // }
-
-  request->send(200, "text/plain", "Waktu saat ini : ???");
+  unsigned long thisTime = millis() / 60000;
+  
+  request->send(200, "text/plain", "Waktu berjalan = " + String(thisTime) + " menit");
 }
