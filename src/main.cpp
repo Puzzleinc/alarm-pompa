@@ -30,6 +30,7 @@ unsigned long previousTime = 0;
 void setup() {
  /*  Common cathode led RGB */
   Serial.begin(115200);
+  while (!Serial); // wait for serial port to connect. Needed for native USB
 
   pinMode(buzz, OUTPUT);
   pinMode(redled, OUTPUT);
