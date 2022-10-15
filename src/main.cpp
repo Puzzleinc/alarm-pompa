@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <LittleFS.h>
 
 #include "wificonnect.h"
 
@@ -18,20 +19,21 @@ const char* deviceName;
 
 // Initialize server
 AsyncWebServer server(80);
-// Make variable prototype
+// Make variable prototype -----------------------
 void handleRequest(AsyncWebServerRequest *request);
+void getTimehistory(AsyncWebServerRequest *request);
 
-// Define millis variable #1
+// Define millis variable #1 ------------------------
 const unsigned long dangerInterval = 1800000; // 30 menit
 const unsigned long warningInterval =  900000; // 15 menit
 const unsigned long okInterval = 0;
 unsigned long previousTime = 0;
 
 void setup() {
- /*  Common cathode led RGB */
   Serial.begin(115200);
   while (!Serial); // wait for serial port to connect. Needed for native USB
 
+  /*  Common cathode led RGB */
   pinMode(buzz, OUTPUT);
   pinMode(redled, OUTPUT);
   pinMode(greenled, OUTPUT);
@@ -47,6 +49,7 @@ void setup() {
 
     //  Creating handle request from client -----------------------
   server.on("/", HTTP_ANY, handleRequest);
+  server.on("/history", HTTP_ANY, getTimehistory);
   server.begin();
 }
 
@@ -76,6 +79,23 @@ void loop() {
 
 void handleRequest(AsyncWebServerRequest *request){
   unsigned long thisTime = millis() / 60000;
-  
   request->send(200, "text/plain", "Waktu berjalan = " + String(thisTime) + " menit");
+}
+
+void getTimehistory(AsyncWebServerRequest *request) {
+    String result = "";
+    File file = LittleFS.open("/data.json", "r");
+
+    if(!file){
+    // Serial.println("Failed to open file for reading");
+    request->send(200, "text/plain", "File history data tidak ditemukan");
+    return;
+    }
+
+    while (file.available()) {
+        result += (char)file.read();
+    }
+    file.close();
+
+    request->send(200, "text/plain", "History waktu = " + result);
 }
