@@ -8,8 +8,8 @@
 
 #define buzz 1
 #define redled 3
-#define greenled 2
-#define blueled 0
+#define greenled 0
+#define blueled 2
 
 /* Put your SSID & Password */
 const char* ssid;  // Enter SSID here
@@ -22,8 +22,8 @@ AsyncWebServer server(80);
 void handleRequest(AsyncWebServerRequest *request);
 
 // Define millis variable #1
-const unsigned long dangerInterval = 1800000; // 30 menit
-const unsigned long warningInterval =  900000; // 15 menit
+const unsigned long dangerInterval = 1800000; // formula (x/60000) = 30 menit
+const unsigned long warningInterval = 900000; // 15 menit
 const unsigned long okInterval = 0;
 unsigned long previousTime = 0;
 
@@ -63,14 +63,14 @@ void loop() {
     digitalWrite(greenled, LOW);
     digitalWrite(redled, HIGH);
     digitalWrite(blueled, LOW);
-  } else if (currentTime >= warningInterval && dangerInterval) {
-    digitalWrite(greenled, HIGH);
-    digitalWrite(redled, LOW);
-    digitalWrite(blueled, LOW);
-  } else {
+  } else if (currentTime >= warningInterval) {
     digitalWrite(greenled, LOW);
     digitalWrite(redled, LOW);
     digitalWrite(blueled, HIGH);
+  } else {
+    digitalWrite(greenled, HIGH);
+    digitalWrite(redled, LOW);
+    digitalWrite(blueled, LOW);
   }
 }
 
