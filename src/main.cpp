@@ -26,6 +26,7 @@ const unsigned long dangerInterval = 1800000; // formula (x/60000) = 30 menit
 const unsigned long warningInterval = 900000; // 15 menit
 const unsigned long okInterval = 0;
 unsigned long previousTime = 0;
+unsigned long currentTime = millis();
 
 void setup() {
  /*  Common cathode led RGB */
@@ -52,8 +53,6 @@ void setup() {
 
 void loop() {
   // Millis Function #1
-  unsigned long currentTime = millis();
-
   if (currentTime >= dangerInterval) {
     /* Event code */
     digitalWrite(buzz, HIGH);
@@ -75,7 +74,6 @@ void loop() {
 }
 
 void handleRequest(AsyncWebServerRequest *request){
-  unsigned long thisTime = millis() / 60000;
-  
+  int thisTime = currentTime / 60000;
   request->send(200, "text/plain", "Waktu berjalan = " + String(thisTime) + " menit");
 }
