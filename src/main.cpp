@@ -3,6 +3,7 @@
 #include <CTBot.h>
 
 #include "wificonnect.h"
+#include "gettimesetting.h"
 
 /* Put your SSID & Password */
 const char* ssid;  // Enter SSID here
@@ -27,14 +28,14 @@ CTBotInlineKeyboard myKbd;   // reply keyboard object helper
 #define blueled 2
 
 // Define millis variable #1
-const unsigned long dangerInterval = 1800000; // formula (x/60000) = 30 menit
-const unsigned long warningInterval = 900000; // 15 menit
+unsigned long dangerInterval; // formula (x/60000) = 30 menit
+unsigned long warningInterval; // 15 menit
 const unsigned long okInterval = 0;
 unsigned long previousTime = 0;
 
 void setup() {
 	Serial.begin(115200);
-	while (!Serial); // wait for serial port to connect. Needed for native USB
+	// while (!Serial); // wait for serial port to connect. Needed for native USB
 
 	// set the pin connected to the LED to act as output pin
 	// pinMode(conled, OUTPUT);
@@ -50,6 +51,27 @@ void setup() {
 	wificonnect(ssid, password, deviceName);
 
 	Serial.println(WiFi.gatewayIP());
+
+	// Initialize filesystem -----------------------
+	if(!LittleFS.begin()){
+		Serial.println("An Error has occurred while mounting LittleFS");
+		return;
+	}
+
+	// Testing filesystem -----------------------
+	File file = LittleFS.open("time.csv", "r");
+	if(!file){
+		Serial.println("Failed to open file for reading");
+		return;
+	}
+	Serial.println("File Content:");
+	while(file.available()){
+		Serial.write(file.read());
+	}
+	file.close();
+
+	// Get time setting from filesystem -----------------------
+	getTimesetting(warningInterval, dangerInterval);
 
 	//  Connecting to telegram -----------------------
 	myBot.setTelegramToken(token);
@@ -75,7 +97,9 @@ void loop() {
 	String welcome = "Halo\n";
 	welcome += "Ini adalah bot untuk app esp8266\n";
 	welcome += "ketik /Keyboard untuk menampilkan menu\n";
-	welcome += "ketik /Time untuk waktu timer\n\n";
+	welcome += "ketik /Time untuk waktu timer berjalan\n";
+	welcome += "ketik /CheckTime untuk melihat catatan waktu tersimpan\n";
+	welcome += "Format pengaturan waktu alarm: MENIT1#MENIT2\n\n";
 
 	if(myBot.getNewMessage(msg)) {
 		if(msg.messageType == CTBotMessageText) {
@@ -83,8 +107,33 @@ void loop() {
 				myBot.sendMessage(msg.sender.id, welcome, myKbd);
 			} else if (msg.text.equalsIgnoreCase("/Time")) {
 				myBot.sendMessage(msg.sender.id, "Waktu berjalan: " + String(thisTime));
+			} else if (msg.text.equalsIgnoreCase("/checkTime")) {
+				// Cek waktu yang tersimpan
+				getTimesetting(warningInterval, dangerInterval);
+				myBot.sendMessage(msg.sender.id, "Interval peringatan: " + String(warningInterval / 60000) + " menit | Interval Shutdown: " + String(dangerInterval / 60000) + " menit" );
 			} else {
-				myBot.sendMessage(msg.sender.id, "Perintah tidak dikenal, coba ketik /Keyboard");
+				String inputWaktu = msg.text;
+				int pembatas = inputWaktu.indexOf("#");
+				uint8_t menit1 = inputWaktu.substring(0, pembatas).toInt();
+				uint8_t menit2 = inputWaktu.substring(pembatas+1, inputWaktu.length()).toInt();
+				
+				if (menit1 < menit2) {
+					//Write to the file
+					File file = LittleFS.open("time.csv", "w");
+					//Write to the file
+					file.print(inputWaktu);
+					delay(1);
+					//Close the file
+					file.close();
+
+					getTimesetting(warningInterval, dangerInterval);
+					myBot.sendMessage(msg.sender.id, "Interval peringatan: " + String(warningInterval / 60000) + " menit | Interval Shutdown: " + String(dangerInterval / 60000) + " menit" );
+					myBot.sendMessage(msg.sender.id, "Pengaturan tersimpan, mereset perangkat.....");
+
+					// ESP.reset();
+				} else {
+					myBot.sendMessage(msg.sender.id, "Error, format waktu tidak valid atau menit ke 2 lebih kecil daripada menit ke 1");
+				}
 			}
 		} else if (msg.messageType == CTBotMessageQuery) {
 			if (msg.callbackQueryData.equals(LIGHT_ON_CALLBACK)) {
@@ -92,11 +141,13 @@ void loop() {
 				digitalWrite(redled, HIGH); // ...turn on the LED (inverted logic!)
 				// terminate the callback with an alert message
 				myBot.endQuery(msg.callbackQueryID, "Light on", true);
+				return;
 			} else if (msg.callbackQueryData.equals(LIGHT_OFF_CALLBACK)) {
 				// pushed "LIGHT OFF" button...
-				digitalWrite(redled , LOW); // ...turn off the LED (inverted logic!)
+				digitalWrite(redled, LOW); // ...turn off the LED (inverted logic!)
 				// terminate the callback with a popup message
 				myBot.endQuery(msg.callbackQueryID, "Light off", true);
+				return;
 			}
 		}
 	}
