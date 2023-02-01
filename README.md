@@ -12,5 +12,10 @@ IP ESP01 menggunakan IP Statis dengan alamat 192.168.0.190
 
 Telegram library menggunakan CTBot 2.1.9 dengan Arduino Json 6.19.0 ( Wajib dibawah 6.2.0 karena error)
 
+
+
 v1 - Menggunakan Webserver untuk pengecekan
 v2 - Menggunakan telegram untuk pengontrolan
+v2.0.5  - Menambahkan fungsi penimpanan konfigurasi pada SPIFFS
+        - Merapikan file dan lakalisasi variabel
+        - Nyalakan lampu dengan delay 10 detik

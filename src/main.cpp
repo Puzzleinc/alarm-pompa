@@ -22,8 +22,8 @@ CTBotInlineKeyboard myKbd;   // reply keyboard object helper
 
 /* ESP pin configuration */
 // uint8_t conled = 4;
-#define buzz 1
-#define redled 3
+#define buzz 1 //TX
+#define redled 3 // RX
 #define greenled 0
 #define blueled 2
 
@@ -32,6 +32,10 @@ unsigned long dangerInterval; // formula (x/60000) = 30 menit
 unsigned long warningInterval; // 15 menit
 const unsigned long okInterval = 0;
 unsigned long previousTime = 0;
+
+// Make variable prototype
+void telegramOperation(unsigned long &currentTime);
+void telegramKeyboard();
 
 void setup() {
 	Serial.begin(115200);
@@ -81,16 +85,37 @@ void setup() {
 	else
 		Serial.println("\nTest connection Failed");
 
-	//  Creating Keyboard button class -----------------------
-	myKbd.addButton("Lampu Nyala", LIGHT_ON_CALLBACK, CTBotKeyboardButtonQuery);
-	myKbd.addButton("Lampu Mati", LIGHT_OFF_CALLBACK, CTBotKeyboardButtonQuery);
-	myKbd.addRow();
-	myKbd.addButton("Contact request", "https://github.com/shurillu/CTBot", CTBotKeyboardButtonURL);
+	telegramKeyboard();
 }
 
 void loop() {
+	unsigned long currentTime;
+	currentTime = millis();
+	telegramOperation(currentTime);
+
+	// Millis Function #1
+	if (currentTime >= dangerInterval) {
+	/* Event code */
+		digitalWrite(buzz, HIGH);
+		delay(500);
+		digitalWrite(buzz, LOW);
+		delay(500);
+		digitalWrite(greenled, LOW);
+		digitalWrite(redled, HIGH);
+		digitalWrite(blueled, LOW);
+	} else if (currentTime >= warningInterval) {
+		digitalWrite(greenled, LOW);
+		digitalWrite(redled, LOW);
+		digitalWrite(blueled, HIGH);
+	} else {
+		digitalWrite(greenled, HIGH);
+		digitalWrite(redled, LOW);
+		digitalWrite(blueled, LOW);
+	}
+}
+
+void telegramOperation(unsigned long &currentTime) {
 	TBMessage msg;
-	unsigned long currentTime = millis();
 	uint8_t thisTime = currentTime / 60000;
 
 	// 3 Relay switch
@@ -138,37 +163,25 @@ void loop() {
 		} else if (msg.messageType == CTBotMessageQuery) {
 			if (msg.callbackQueryData.equals(LIGHT_ON_CALLBACK)) {
 				// pushed "LIGHT ON" button...
-				digitalWrite(redled, HIGH); // ...turn on the LED (inverted logic!)
+				digitalWrite(redled, HIGH);
+				delay(10000);
 				// terminate the callback with an alert message
 				myBot.endQuery(msg.callbackQueryID, "Light on", true);
-				return;
 			} else if (msg.callbackQueryData.equals(LIGHT_OFF_CALLBACK)) {
 				// pushed "LIGHT OFF" button...
-				digitalWrite(redled, LOW); // ...turn off the LED (inverted logic!)
+				digitalWrite(redled, LOW);
+				delay(10000);
 				// terminate the callback with a popup message
 				myBot.endQuery(msg.callbackQueryID, "Light off", true);
-				return;
 			}
 		}
 	}
+}
 
-	// Millis Function #1
-	if (currentTime >= dangerInterval) {
-	/* Event code */
-		digitalWrite(buzz, HIGH);
-		delay(500);
-		digitalWrite(buzz, LOW);
-		delay(500);
-		digitalWrite(greenled, LOW);
-		digitalWrite(redled, HIGH);
-		digitalWrite(blueled, LOW);
-	} else if (currentTime >= warningInterval) {
-		digitalWrite(greenled, LOW);
-		digitalWrite(redled, LOW);
-		digitalWrite(blueled, HIGH);
-	} else {
-		digitalWrite(greenled, HIGH);
-		digitalWrite(redled, LOW);
-		digitalWrite(blueled, LOW);
-	}
+void telegramKeyboard() {
+	//  Creating Keyboard button class -----------------------
+	myKbd.addButton("Lampu Nyala", LIGHT_ON_CALLBACK, CTBotKeyboardButtonQuery);
+	myKbd.addButton("Lampu Mati", LIGHT_OFF_CALLBACK, CTBotKeyboardButtonQuery);
+	myKbd.addRow();
+	myKbd.addButton("Contact request", "https://github.com/shurillu/CTBot", CTBotKeyboardButtonURL);
 }
